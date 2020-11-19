@@ -1,0 +1,110 @@
+﻿<Window x:Class="LabAutomationPhysicochemical.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LabAutomationPhysicochemical"
+        Title="理化组陈梓莹" Height="600" Width="1200"
+        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded" Icon="Icon/favicon.ico">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="9*" />
+        </Grid.RowDefinitions>
+        <!--菜单栏部分-->
+        <ScrollViewer Tag="0" Name="topScrollViewer" Grid.Row="0"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" Grid.ColumnSpan="2">
+            <Grid>
+                <!--计算公式部分-->
+                <StackPanel VerticalAlignment="Center">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="1.5*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="5,0,5,0" Orientation="Horizontal" Grid.Column="0">
+                            <Label HorizontalAlignment="Left" VerticalContentAlignment="Center" Content="委托单号：" Name="strReportNoLabel"></Label>
+                            <Label HorizontalAlignment="Left" VerticalContentAlignment="Center" Name="ReportNoLabel"></Label>
+                        </StackPanel>
+                        <StackPanel Margin="5,0,5,0" Grid.Column="2" Grid.ColumnSpan="2"  Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <RadioButton Name="testZDRadioButton" Margin="10,0,10,0" IsChecked="True" HorizontalAlignment="Center" VerticalAlignment="Center">最低检测质量浓度</RadioButton>
+                            <RadioButton Margin="10,0,10,0" Name="testJCRadioButton" HorizontalAlignment="Center" VerticalAlignment="Center">检出限</RadioButton>
+                            <Label Content="单位：" HorizontalAlignment="Center" VerticalContentAlignment="Center"></Label>
+                        </StackPanel>
+                        <StackPanel Margin="5,0,5,0" Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Button FontSize="16" HorizontalAlignment="Center" Name="importExcel" Click="importExcel_Click" MouseMove="importExcel_MouseMove">导出Excel</Button>
+                        </StackPanel>
+                        <!--<StackPanel Margin="5,0,5,0" Grid.Column="6" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Button FontSize="16" HorizontalAlignment="Center" Name="importAll" Click="importAll_Click" MouseMove="importExcel_MouseMove">导出模板</Button>
+                        </StackPanel>-->
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!--下方内容部分-->
+        <ScrollViewer Tag="1" Name="mainScrollViewer"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" Grid.ColumnSpan="2" Margin="0,58,0,0" Grid.RowSpan="2">
+            <Border BorderThickness="1" BorderBrush="Black" Name="gridborder" >
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="9*"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <!--搜索部分-->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Label Content="搜索信息：" Margin="10,0,0,0" VerticalContentAlignment="Center"></Label>
+                        <TextBox VerticalContentAlignment="Center" MinWidth="100" ToolTip="请输入搜索内容" Name="searchTextBox" TextChanged="searchTextBox_TextChanged"></TextBox>
+                        <Label Name="TargetCompanyLabel" Content="目标物上机测定浓度单位：" Margin="10,0,0,0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"></Label>
+                        <ComboBox HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="50" Name="TargetCompanyComboBox">
+                            <ComboBoxItem Tag="1" Content="mg/L" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.001"  Content="μg/L"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.000001" Content="ng/L"></ComboBoxItem>
+                            <ComboBoxItem Tag="1" Content="mg"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.001" Content="μg"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.000001"  Content="ng"></ComboBoxItem>
+                        </ComboBox>
+                        <Label Name="AccuracyLabel" Content="计算精度：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
+                        <ComboBox VerticalAlignment="Center" MinWidth="50" Name="AccuracyComboBox">
+                            <ComboBoxItem Content="默认" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Content="0"></ComboBoxItem>
+                            <ComboBoxItem Content="1"></ComboBoxItem>
+                            <ComboBoxItem Content="2"></ComboBoxItem>
+                            <ComboBoxItem Content="3"></ComboBoxItem>
+                            <ComboBoxItem Content="4"></ComboBoxItem>
+                            <ComboBoxItem Content="5"></ComboBoxItem>
+                            <ComboBoxItem Content="6"></ComboBoxItem>
+                            <ComboBoxItem Content="7"></ComboBoxItem>
+                            <ComboBoxItem Content="8"></ComboBoxItem>
+                            <ComboBoxItem Content="9"></ComboBoxItem>
+                        </ComboBox>
+
+                        <Label Name="FormulaLabel" Content="公式：" Margin="10,0,10,0" VerticalContentAlignment="Center"></Label>
+                        <ComboBox VerticalAlignment="Center" MinWidth="50" Name="FormulaComboBox">
+                            <ComboBoxItem Content="C = M × f" IsSelected="True"></ComboBoxItem>
+                            <!--<ComboBoxItem Content="C = Ci × f × V1 / V" IsSelected="True"></ComboBoxItem>-->
+                            <!--<ComboBoxItem Content="C = Ci × f × V1 / (m × Wdm)" IsSelected="True"></ComboBoxItem>-->
+                            <!--<ComboBoxItem Content="C = Ci × f / V"></ComboBoxItem>-->
+                            <!--<ComboBoxItem Content="X = Ci * f * (V1 / V) * (1/1000)"></ComboBoxItem>-->
+                        </ComboBox>
+
+                        <ComboBox HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="50" Name="ZDJCCompanyComboBox">
+                            <ComboBoxItem Tag="1" Content="mg/L" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.001"  Content="μg/L"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.000001" Content="ng/L"></ComboBoxItem>
+                            <!--<ComboBoxItem Tag="1" Content="mg/kg" IsSelected="True"></ComboBoxItem>
+                            <ComboBoxItem Tag="0.000001" Content="μg/kg"></ComboBoxItem>-->
+                        </ComboBox>
+                    </StackPanel>
+                    <Grid Grid.Row="1" Name="maingrid">
+
+                    </Grid>
+                </Grid>
+            </Border>
+        </ScrollViewer>
+
+    </Grid>
+</Window>
