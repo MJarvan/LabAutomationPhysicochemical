@@ -36,9 +36,13 @@ namespace LabAutomationPhysicochemical
         /// </summary>
         List<KeyValuePair<string,string>> compoundsNameList = new List<KeyValuePair<string,string>>();
         /// <summary>
-        /// 添加了平行样之后的分样
+        /// 横表添加了平行样之后的分样
         /// </summary>
-        List<List<string>> finalsampleNameList = new List<List<string>>();
+        List<List<string>> verticalSampleNameList = new List<List<string>>();
+        /// <summary>
+        /// 竖表添加了平行样之后的分样
+        /// </summary>
+        List<List<string>> horizontalSampleNameList = new List<List<string>>();
 
         /// <summary>
         /// 委托单号
@@ -47,6 +51,8 @@ namespace LabAutomationPhysicochemical
 
         //调整一个横表格的总列数
         int verticalSheetColumnCount = 12;
+        //调整一个横表格的总列数
+        int horizontalSheetColumnCount = 7;
 
         /// <summary>
         /// 生活饮用水标准的datatable
@@ -355,6 +361,7 @@ namespace LabAutomationPhysicochemical
                     }
                 }
             }
+            dataTable.Columns.Add("C");
 
             for (int i = dataTable.Rows.Count - 1; i >= 0; i--)
             {
@@ -464,10 +471,12 @@ namespace LabAutomationPhysicochemical
         /// <param name="dataTable"></param>
         private void AddParallelSamplesToList(DataTable dataTable)
         {
-            List<string> sampleNameList = new List<string>();
+            List<string> sampleNameListV = new List<string>();
+            List<string> sampleNameListH = new List<string>();
             string Ebanlance = "Dup";
             string Cbanlance = "平均";
-            int importTakeNum = 17;
+            int importTakeNumV = 17;
+            int importTakeNumH = 23;
             for (int i = 0; i < dataTable.Rows.Count; i++)
             {
                 string name = dataTable.Rows[i]["目标化合物"].ToString();
@@ -484,23 +493,45 @@ namespace LabAutomationPhysicochemical
                 {
                     dataTable.Rows[i]["样品量"] = 0;
                 }
-                sampleNameList.Add(name);
+                sampleNameListV.Add(name);
             }
-            if (finalsampleNameList.Count == 0)
+            sampleNameListV.Add("以下空白");
+            sampleNameListH = sampleNameListV.ToList();
+            //横表
+            if (verticalSampleNameList.Count == 0)
             {
-                int Count = sampleNameList.Count % importTakeNum > 0 ? sampleNameList.Count / importTakeNum + 1 : sampleNameList.Count / importTakeNum;
+                int Count = sampleNameListV.Count % importTakeNumV > 0 ? sampleNameListV.Count / importTakeNumV + 1 : sampleNameListV.Count / importTakeNumV;
                 for (int i = 0; i < Count; i++)
                 {
                     if (i == Count - 1)
                     {
-                        List<string> cellList = sampleNameList.ToList();
-                        finalsampleNameList.Add(cellList);
+                        List<string> cellList = sampleNameListV.ToList();
+                        verticalSampleNameList.Add(cellList);
                     }
                     else
                     {
-                        List<string> cellList = sampleNameList.Take(importTakeNum).ToList();
-                        sampleNameList.RemoveRange(0,importTakeNum);
-                        finalsampleNameList.Add(cellList);
+                        List<string> cellList = sampleNameListV.Take(importTakeNumV).ToList();
+                        sampleNameListV.RemoveRange(0,importTakeNumV);
+                        verticalSampleNameList.Add(cellList);
+                    }
+                }
+            }
+            //竖表
+            if (horizontalSampleNameList.Count == 0)
+            {
+                int Count = sampleNameListH.Count % importTakeNumH > 0 ? sampleNameListH.Count / importTakeNumH + 1 : sampleNameListH.Count / importTakeNumH;
+                for (int i = 0; i < Count; i++)
+                {
+                    if (i == Count - 1)
+                    {
+                        List<string> cellList = sampleNameListH.ToList();
+                        horizontalSampleNameList.Add(cellList);
+                    }
+                    else
+                    {
+                        List<string> cellList = sampleNameListH.Take(importTakeNumH).ToList();
+                        sampleNameListH.RemoveRange(0,importTakeNumH);
+                        horizontalSampleNameList.Add(cellList);
                     }
                 }
             }
@@ -530,9 +561,10 @@ namespace LabAutomationPhysicochemical
             }
             else
             {
-                //CreateHorizontalExcel();
+                CreateHorizontalExcel();
             }
         }
+
 
         /// <summary>
         /// 生成compoundsNameList
@@ -573,6 +605,41 @@ namespace LabAutomationPhysicochemical
         }
 
         /// <summary>
+        /// 创建竖表Excel
+        /// </summary>
+        private void CreateHorizontalExcel()
+        {
+            var workbook = new HSSFWorkbook();
+            var sheet = workbook.CreateSheet("横-水");
+            sheet.ForceFormulaRecalculation = true;
+            int Count = 0;
+            foreach (List<string> list in horizontalSampleNameList)
+            {
+                CreateHorizontalSheet(sheet,list,Count);
+                Count++;
+            }
+
+            // 自动调整列距
+            for (int i = 0; i < Count * horizontalSheetColumnCount; i++)
+            {
+                if (i % horizontalSheetColumnCount == 0)
+                {
+                    sheet.SetColumnWidth(i,40 * 256);
+                }
+                //else if ((i + 1) % horizontalSheetColumnCount == 0)
+                //{
+                //    sheet.SetColumnWidth(i,30 * 256);
+                //}
+                else
+                {
+                    sheet.AutoSizeColumn(i);
+                }
+            }
+
+            ExportToExcel(workbook);
+        }
+
+        /// <summary>
         /// 创建横表Excel
         /// </summary>
         private void CreateVerticalExcel()
@@ -580,10 +647,8 @@ namespace LabAutomationPhysicochemical
             var workbook = new HSSFWorkbook();
             var sheet = workbook.CreateSheet("横-水");
             sheet.ForceFormulaRecalculation = true;
-
-
             int Count = 0;
-            foreach (List<string> list in finalsampleNameList)
+            foreach (List<string> list in verticalSampleNameList)
             {
                 CreateVerticalSheet(sheet,list,Count);
                 Count++;
@@ -607,6 +672,182 @@ namespace LabAutomationPhysicochemical
             }
 
             ExportToExcel(workbook);
+        }
+
+
+        private void CreateHorizontalSheet(ISheet sheet,List<string> cellList,int Count)
+        {
+            DataSet dataSet = new DataSet();
+            if (testZDRadioButton.IsChecked == true)
+            {
+                dataSet = FirstStanderDataSet;
+            }
+            else if (testJCRadioButton.IsChecked == true)
+            {
+                dataSet = SecondStanderDataSet;
+            }
+            HSSFWorkbook workbook = sheet.Workbook as HSSFWorkbook;
+            //设置顶部大标题样式
+            HSSFCellStyle cellStyle = CreateStyle(workbook);
+            HSSFCellStyle bordercellStyle = CreateStyle(workbook);
+            //HSSFCellStyle cellGreyStyle = CreateGreyStyle(workbook);
+            //HSSFCellStyle cellGreenStyle = CreateGreenStyle(workbook);
+            //HSSFCellStyle cellRedStyle = CreateRedStyle(workbook);
+            //HSSFCellStyle cellYellowStyle = CreateYellowStyle(workbook);
+            bordercellStyle.BorderLeft = BorderStyle.Thin;
+            bordercellStyle.BorderTop = BorderStyle.Thin;
+            bordercellStyle.BorderLeft = BorderStyle.Thin;
+            bordercellStyle.BorderRight = BorderStyle.Thin;
+            //前五行 大表头
+            for (int i = 0; i < 5; i++)
+            {
+                //第一行最右显示委托单号
+                HSSFRow row = (Count == 0) ? (HSSFRow)sheet.CreateRow(i) : (HSSFRow)sheet.GetRow(i); //创建行或者获取行
+                row.HeightInPoints = 30;
+                switch (i)
+                {
+                    case 0:
+                        {
+                            for (int j = horizontalSheetColumnCount * Count; j < horizontalSheetColumnCount * Count + horizontalSheetColumnCount; j++)
+                            {
+                                var cell = row.CreateCell(j);
+                                cell.CellStyle = bordercellStyle;
+                                if (j == horizontalSheetColumnCount * Count)
+                                {
+                                    cell.SetCellValue("计算公式：");
+                                    CellRangeAddress region = new CellRangeAddress(i,i,horizontalSheetColumnCount * Count,horizontalSheetColumnCount * Count + 1);
+                                    sheet.AddMergedRegion(region);
+                                }
+                                else if (j == horizontalSheetColumnCount * Count + 2)
+                                {
+                                    cell.SetCellValue("目标化合物");
+                                    CellRangeAddress nameregion = new CellRangeAddress(i,i,horizontalSheetColumnCount * Count + 2,horizontalSheetColumnCount * Count + 5);
+                                    sheet.AddMergedRegion(nameregion);
+                                }
+                                else if (j == horizontalSheetColumnCount * Count + 6)
+                                {
+                                    cell.SetCellValue("备注");
+                                    CellRangeAddress namesregion = new CellRangeAddress(i,i + 4,horizontalSheetColumnCount * Count + 6,horizontalSheetColumnCount * Count + 6);
+                                    sheet.AddMergedRegion(namesregion);
+                                }
+                            }
+                            break;
+                        }
+                    case 1:
+                        {
+
+                            for (int j = horizontalSheetColumnCount * Count; j < horizontalSheetColumnCount * Count + horizontalSheetColumnCount; j++)
+                            {
+                                var cell = row.CreateCell(j);
+                                cell.CellStyle = bordercellStyle;
+
+                                if (j == horizontalSheetColumnCount * Count + 6)
+                                {
+                                    cell.SetCellValue(string.Empty);
+                                }
+                                else if (j > horizontalSheetColumnCount * Count + 4)
+                                {
+                                    cell.SetCellValue(dataSet.Tables[j - horizontalSheetColumnCount * Count - 5].TableName);
+                                }
+                                else if (j > horizontalSheetColumnCount * Count + 2)
+                                {
+                                    cell.SetCellValue(dataSet.Tables[j - horizontalSheetColumnCount * Count - 3].TableName);
+                                }
+                                else if (j == horizontalSheetColumnCount * Count)
+                                {
+                                    CellRangeAddress region = new CellRangeAddress(i,i + 2,j,j + 1);
+                                    sheet.AddMergedRegion(region);
+                                    //要和公式那一块绑定在一起
+                                    string wdm = FormulaComboBox.Text + "\n"
+                                    + "C——样品中待测离子浓度，" + ZDJCCompanyComboBox.Text + "\n"
+                                    + "Ci——查得样品中待测离子的浓度，" + TargetCompanyComboBox.Text + "\n"
+                                    + "f——样品稀释倍数。";
+                                    HSSFRichTextString rtsWdm = new HSSFRichTextString(wdm);
+                                    cell.SetCellValue(rtsWdm);
+                                }
+                            }
+                            break;
+                        }
+                    case 2:
+                        {
+                            for (int j = horizontalSheetColumnCount * Count; j < horizontalSheetColumnCount * Count + horizontalSheetColumnCount; j++)
+                            {
+                                var cell = row.CreateCell(j);
+                                cell.CellStyle = bordercellStyle;
+                                if (j == horizontalSheetColumnCount * Count + 2)
+                                {
+                                    cell.SetCellValue("/");
+                                    CellRangeAddress firstregion = new CellRangeAddress(i,i,horizontalSheetColumnCount * Count + 2,horizontalSheetColumnCount * Count + 3);
+                                    sheet.AddMergedRegion(firstregion);
+                                }
+                                else if (j == horizontalSheetColumnCount * Count + 4)
+                                {
+                                    string value = string.Empty;
+                                    if (testJCRadioButton.IsChecked == true)
+                                    {
+                                        value = "√\t" + testJCRadioButton.Content + "\t□\t" + testZDRadioButton.Content + "(" + ZDJCCompanyComboBox.Text + ")";
+                                    }
+                                    else if (testZDRadioButton.IsChecked == true)
+                                    {
+                                        value = "□\t" + testJCRadioButton.Content + "\t√\t" + testZDRadioButton.Content + "(" + ZDJCCompanyComboBox.Text + ")";
+                                    }
+                                    cell.SetCellValue(value);
+                                    CellRangeAddress secondregion = new CellRangeAddress(i,i,horizontalSheetColumnCount * Count + 4,horizontalSheetColumnCount * Count + 5);
+                                    sheet.AddMergedRegion(secondregion);
+                                }
+                            }
+                            break;
+                        }
+                    case 3:
+                        {
+                            for (int j = horizontalSheetColumnCount * Count; j < horizontalSheetColumnCount * Count + horizontalSheetColumnCount; j++)
+                            {
+                                var cell = row.CreateCell(j);
+                                cell.CellStyle = bordercellStyle;
+                                if (j == horizontalSheetColumnCount * Count + 2)
+                                {
+                                    cell.SetCellValue("/");
+                                    CellRangeAddress firstregion = new CellRangeAddress(i,i,horizontalSheetColumnCount * Count + 2,horizontalSheetColumnCount * Count + 3);
+                                    sheet.AddMergedRegion(firstregion);
+                                }
+                                else if (j > horizontalSheetColumnCount * Count + 3 && j < horizontalSheetColumnCount * Count + 6)
+                                {
+                                    cell.SetCellValue(compoundsNameList[j - horizontalSheetColumnCount * Count - 4].Value);
+                                }
+                            }
+                            break;
+                        }
+                    case 4:
+                        {
+                            for (int j = horizontalSheetColumnCount * Count; j < horizontalSheetColumnCount * Count + horizontalSheetColumnCount; j++)
+                            {
+                                var cell = row.CreateCell(j);
+                                cell.CellStyle = bordercellStyle;
+                                if (j == horizontalSheetColumnCount * Count)
+                                {
+                                    cell.SetCellValue("样品编号");
+                                }
+                                else if (j == horizontalSheetColumnCount * Count + 1)
+                                {
+                                    cell.SetCellValue("稀释倍数f");
+                                }
+                                else if (j == horizontalSheetColumnCount * Count + 2)
+                                {
+                                    cell.SetCellValue("目标化合物测定值 M  (mg/L)");
+                                    CellRangeAddress thirdregion = new CellRangeAddress(i,i,horizontalSheetColumnCount * Count + 2,horizontalSheetColumnCount * Count + 3);
+                                    sheet.AddMergedRegion(thirdregion);
+                                }
+                                else if (j == horizontalSheetColumnCount * Count + 4)
+                                {
+                                    cell.SetCellValue("目标化合物浓度 C (mg/L)");
+                                    CellRangeAddress fourthregion = new CellRangeAddress(i,i,horizontalSheetColumnCount * Count + 4,horizontalSheetColumnCount * Count + 5);
+                                    sheet.AddMergedRegion(fourthregion);
+                                }
+                            }
+                            break;
+                        }
+                }
+            }
         }
 
         /// <summary>
@@ -793,21 +1034,232 @@ namespace LabAutomationPhysicochemical
                 HSSFRow sampleRow = (Count == 0) ? (HSSFRow)sheet.CreateRow(5 + k) : (HSSFRow)sheet.GetRow(5 + k); //创建行或者获取行
                 sampleRow.HeightInPoints = 20;
                 string sampleName = cellList[k];
-                for (int l = verticalSheetColumnCount * Count; l < verticalSheetColumnCount * Count; l++)
+                string sampleDilutionratio = string.Empty;
+                List<string> sampleSize = new List<string>();
+                List<string> sampleModelC= new List<string>();
+                for (int p = 0; p < dataSet.Tables.Count; p++)
+                {
+                    DataTable dataTable = dataSet.Tables[p];
+                    if (sampleModelC.Count != compoundsNameList.Count)
+                    {
+                        sampleModelC.Add(dataTable.TableName);
+                    }
+                    for (int o = 0; o < dataTable.Rows.Count; o++)
+                    {
+                        if (dataTable.Rows[o][0].ToString() == sampleName)
+                        {
+                            if (sampleDilutionratio == string.Empty)
+                            {
+                                sampleDilutionratio = dataTable.Rows[o][1].ToString();
+                            }
+                            sampleSize.Add(dataTable.Rows[o][2].ToString());
+                            break;
+                        }
+                    }
+                }
+
+                for (int l = verticalSheetColumnCount * Count; l < verticalSheetColumnCount * Count + verticalSheetColumnCount; l++)
                 {
                     var sampleCell = sampleRow.CreateCell(l);
                     sampleCell.CellStyle = bordercellStyle;
                     if (l == verticalSheetColumnCount * Count)
                     {
                         sampleCell.SetCellValue(sampleName);
+                        CellRangeAddress firstregion = new CellRangeAddress(k + 5,k + 5,verticalSheetColumnCount * Count,verticalSheetColumnCount * Count + 1);
+                        sheet.AddMergedRegion(firstregion);
                     }
-                    else if (l == verticalSheetColumnCount * Count + 1)
+                    else if (l == verticalSheetColumnCount * Count + 2)
                     {
-                        
+                        sampleCell.SetCellValue(sampleDilutionratio);
+                    }
+                    else if (l > verticalSheetColumnCount * Count + 2 && l < verticalSheetColumnCount * Count + 7)
+                    {
+                        if (sampleName.Contains("以下空白"))
+                        {
+                            sampleCell.SetCellValue(string.Empty);
+                        }
+                        else
+                        {
+                            string value = sampleSize[l - verticalSheetColumnCount * Count - 3];
+                            if (!value.Contains("/"))
+                            {
+                                decimal C1 = decimal.Parse(value);
+                                C1 = Math.Round(C1,4,MidpointRounding.ToEven);
+                                value = CalculateAccuracyCX(C1.ToString(),4);
+                            }
+                            sampleCell.SetCellValue(value);
+                        }
+                    }
+                    else if (l > verticalSheetColumnCount * Count + 6 && l < verticalSheetColumnCount * Count + 11)
+                    {
+
+                        string value = string.Empty;
+                        DataTable dataTable = dataSet.Tables[l - verticalSheetColumnCount * Count - 7];
+                        if (sampleName.Contains("平均"))
+                        {
+                            for (int o = 0; o < dataTable.Rows.Count; o++)
+                            {
+                                if (dataTable.Rows[o][0].ToString() == sampleName)
+                                {
+                                    decimal C1 = decimal.Parse(dataTable.Rows[o - 1][3].ToString());
+                                    decimal C2 = decimal.Parse(dataTable.Rows[o - 2][3].ToString());
+                                    value = CompareCompoundWithFormulaAverage(sampleModelC[l - verticalSheetColumnCount * Count - 7],C1,C2);
+                                    break;
+                                }
+                            }
+                        }
+                        else if (!sampleName.Contains("以下空白"))
+                        {
+                            value = CompareCompoundWithFormula(dataSet,sampleModelC[l - verticalSheetColumnCount * Count - 7],sampleName,sampleDilutionratio,sampleSize[l - verticalSheetColumnCount * Count - 7]);
+                        }
+                        sampleCell.SetCellValue(value);
+                    }
+                    else
+                    {
+                        sampleCell.SetCellValue("/");
                     }
                 }
             }
         }
+
+        private string CompareCompoundWithFormulaAverage(string compoundName,decimal c1,decimal c2)
+        {
+            //检出限
+            decimal modelC = decimal.Zero;
+            decimal C = (c1 + c2) / 2;
+            foreach (KeyValuePair<string,string> keyValuePair in compoundsNameList)
+            {
+                if (keyValuePair.Key == compoundName)
+                {
+                    modelC = decimal.Parse(keyValuePair.Value);
+                }
+            }
+            if (C > modelC)
+            {
+                string realC = string.Empty;
+                //大于等于1,取3位有效数字
+                if (C >= 1 && C < 1000)
+                {
+                    realC = CalculateAccuracyThree(C);
+                }
+                //小于1,与检出限一致
+                else if (C < 1)
+                {
+                    realC = CalculateAccuracyC(C,modelC);
+                }
+                else
+                {
+                    realC = ScientificCounting(C);
+                }
+                return realC;
+            }
+            //ND和<检出限的不一样
+            if (testZDRadioButton.IsChecked == true)
+            {
+                return "<" + modelC;
+            }
+            else
+            {
+                return "ND";
+            }
+        }
+
+        private string CompareCompoundWithFormula(DataSet dataSet,string compoundName,string sampleName,string sampleDilutionratio,string sampleSize)
+        {
+            //计算公式C = M×f
+            //检出限
+            decimal modelC = decimal.Zero;
+            foreach (KeyValuePair<string,string> keyValuePair in compoundsNameList)
+            {
+                if (keyValuePair.Key == compoundName)
+                {
+                    modelC = decimal.Parse(keyValuePair.Value);
+                }
+            }
+            //稀释倍数
+            decimal f;
+            //取样量
+            decimal M;
+            if (sampleDilutionratio.Contains("/") || sampleSize.Contains("/"))
+            {
+                //ND和<检出限的不一样
+                if (testZDRadioButton.IsChecked == true)
+                {
+                    return "<" + modelC;
+                }
+                else
+                {
+                    return "ND";
+                }
+            }
+            else
+            {
+                f = decimal.Parse(sampleDilutionratio);
+                M = decimal.Parse(sampleSize);
+                M = Math.Round(M,4,MidpointRounding.ToEven);
+            }
+
+            decimal taggetC = decimal.Parse((TargetCompanyComboBox.SelectedItem as ComboBoxItem).Tag.ToString());
+            decimal ZDJCCi = decimal.Parse((ZDJCCompanyComboBox.SelectedItem as ComboBoxItem).Tag.ToString());
+            //单位换算
+            decimal k = taggetC / ZDJCCi;
+            //结果
+            decimal C = M * f * k;
+
+            if (C > modelC)
+            {
+                string realC = string.Empty;
+                //大于等于1,取3位有效数字
+                if (C >= 1 && C < 1000)
+                {
+                    realC = CalculateAccuracyThree(C);
+                }
+                //小于1,与检出限一致
+                else if (C < 1)
+                {
+                    realC = CalculateAccuracyC(C,modelC);
+                }
+                else
+                {
+                    realC = ScientificCounting(C);
+                }
+                foreach (DataTable dataTable in dataSet.Tables)
+                {
+                    if (dataTable.TableName == compoundName)
+                    {
+                        for (int i = 0; i < dataTable.Rows.Count; i++)
+                        {
+                            if (dataTable.Rows[i][0].ToString() == sampleName)
+                            {
+                                dataTable.Rows[i][3] = realC;
+                                break;
+                            }
+                        }
+                    }
+                }
+                return realC;
+            }
+            //ND和<检出限的不一样
+            if (testZDRadioButton.IsChecked == true)
+            {
+                return "<" + modelC;
+            }
+            else
+            {
+                return "ND";
+            }
+        }
+
+        private string CalculateAccuracyC(decimal C,decimal modelC)
+        {
+            string[] numC = modelC.ToString().Split(".");
+            int numModelC = numC[1].Length;
+            C = Math.Round(C,numModelC,MidpointRounding.ToEven);
+            string realC = C.ToString();
+            return realC;
+        }
+
+
 
         /// <summary>
         /// 导出到Excel
@@ -876,6 +1328,101 @@ namespace LabAutomationPhysicochemical
             cellStyle.LeftBorderColor = HSSFColor.Black.Index;
 
             return cellStyle;
+        }
+
+        /// <summary>
+        /// 科学计数法
+        /// </summary>
+        /// <param name="testNum"></param>5
+        /// <returns></returns>
+        private string ScientificCounting(decimal testNum)
+        {
+            string returnnum = string.Empty;
+            string oneNum = "1";
+            if (testNum.ToString().Length >= 4)
+            {
+                for (int i = 0; i < testNum.ToString().Length - 1; i++)
+                {
+                    oneNum += "0";
+                }
+
+                decimal onenum = decimal.Parse(oneNum);
+                decimal finalnum = Math.Round(testNum / onenum,2,MidpointRounding.ToEven);
+                string finalvalue = CalculateAccuracyCX(finalnum.ToString(),2);
+                returnnum = finalvalue + "×" + "10" + (testNum.ToString().Length - 1).ToString();
+            }
+            return returnnum;
+        }
+
+        /// <summary>
+        /// 取三位有效数字
+        /// </summary>
+        /// <param name="C"></param>
+        /// <returns></returns>
+        private string CalculateAccuracyThree(decimal C)
+        {
+            string realC = C.ToString();
+            if (C < 10)
+            {
+                C = Math.Round(C,2,MidpointRounding.ToEven);
+                realC = CalculateAccuracyCX(C.ToString(),2);
+            }
+            else if (C < 100)
+            {
+                C = Math.Round(C,1,MidpointRounding.ToEven);
+                realC = CalculateAccuracyCX(C.ToString(),1);
+            }
+            else if (C < 1000)
+            {
+                C = Math.Round(C,0,MidpointRounding.ToEven);
+                realC = C.ToString();
+            }
+            return realC;
+        }
+
+        /// <summary>
+        /// 补齐X位数的零
+        /// </summary>
+        /// <param name="compoundName"></param>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        private string CalculateAccuracyCX(string value,int X)
+        {
+            string[] beforeValue = value.Split(".");
+            int num;
+            //没有小数点的
+            if (beforeValue.Length < 2)
+            {
+                num = X;
+            }
+            else
+            {
+                num = X - beforeValue[beforeValue.Length - 1].Length;
+            }
+            //计算后补零
+            if (num != 0)
+            {
+                if (value.ToString().Contains("."))
+                {
+                    string answer = value.ToString();
+                    for (int i = 0; i < num; i++)
+                    {
+                        answer += "0";
+                    }
+                    return answer;
+                }
+                else
+                {
+                    string answer = value.ToString() + ".";
+                    for (int i = 0; i < num; i++)
+                    {
+                        answer += "0";
+                    }
+                    return answer;
+                }
+            }
+
+            return value;
         }
 
         /// <summary>
