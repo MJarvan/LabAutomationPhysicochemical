@@ -550,21 +550,20 @@ namespace LabAutomationPhysicochemical
                 return;
             }
             //判断化合物是否大于2，从而分割成横表或者竖表
-            if (compoundsNameList.Count > 2)
+            if (compoundsNameList.Count > 4)
             {
-                CreateVerticalExcel();
+                CreateMutiVerticalExcel();
             }
             //有机组横表
-            else if (compoundsNameList.Count > 4)
+            else if (compoundsNameList.Count > 2)
             {
-                //CreateOrganicVerticalExcel();
+                CreateVerticalExcel();
             }
             else
             {
                 CreateHorizontalExcel();
             }
         }
-
 
         /// <summary>
         /// 生成compoundsNameList
@@ -605,12 +604,74 @@ namespace LabAutomationPhysicochemical
         }
 
         /// <summary>
+        /// 创建原版横表
+        /// </summary>
+        private void CreateMutiVerticalExcel()
+        {
+            var workbook = new HSSFWorkbook();
+            //切割化合物
+            List<List<KeyValuePair<string,string>>> renameList = new List<List<KeyValuePair<string,string>>>();
+            List<KeyValuePair<string,string>> cnList = compoundsNameList.ToList();
+            int importTakeNum = 4;
+            int importCount = compoundsNameList.Count % importTakeNum > 0 ? compoundsNameList.Count / importTakeNum + 1 : compoundsNameList.Count / importTakeNum;
+            for (int i = 0; i < importCount; i++)
+            {
+                if (i == importCount - 1)
+                {
+                    List<KeyValuePair<string,string>> cellList = cnList.ToList();
+                    renameList.Add(cellList);
+                }
+                else
+                {
+                    List<KeyValuePair<string,string>> cellList = cnList.Take(importTakeNum).ToList();
+                    cnList.RemoveRange(0,importTakeNum);
+                    renameList.Add(cellList);
+                }
+            }
+            for (int j = 0; j < renameList.Count; j++)
+            {
+                var sheet = workbook.CreateSheet(j.ToString() + "-横-水");
+                sheet.ForceFormulaRecalculation = true;
+                int Count = 0;
+                foreach (List<string> list in verticalSampleNameList)
+                {
+                    CreateVerticalSheet(sheet,list,Count,renameList[j]);
+                    Count++;
+                }
+
+                // 自动调整列距
+                for (int i = 0; i < Count * verticalSheetColumnCount; i++)
+                {
+                    if (i % verticalSheetColumnCount == 0)
+                    {
+                        sheet.SetColumnWidth(i,40 * 256);
+                    }
+                    else if ((i + 1) % verticalSheetColumnCount == 0)
+                    {
+                        sheet.SetColumnWidth(i,20 * 256);
+                    }
+                    else
+                    {
+                        sheet.AutoSizeColumn(i);
+                    }
+
+                    if (sheet.GetColumnWidth(i) < 10 * 256)
+                    {
+                        sheet.SetColumnWidth(i,10 * 256);
+                    }
+                }
+            }
+
+            ExportToExcel(workbook);
+        }
+
+        /// <summary>
         /// 创建竖表Excel
         /// </summary>
         private void CreateHorizontalExcel()
         {
             var workbook = new HSSFWorkbook();
-            var sheet = workbook.CreateSheet("横-水");
+            var sheet = workbook.CreateSheet("竖-水");
             sheet.ForceFormulaRecalculation = true;
             int Count = 0;
             foreach (List<string> list in horizontalSampleNameList)
@@ -626,13 +687,17 @@ namespace LabAutomationPhysicochemical
                 {
                     sheet.SetColumnWidth(i,40 * 256);
                 }
-                //else if ((i + 1) % horizontalSheetColumnCount == 0)
-                //{
-                //    sheet.SetColumnWidth(i,30 * 256);
-                //}
+                else if ((i + 1) % horizontalSheetColumnCount == 0)
+                {
+                    sheet.SetColumnWidth(i,20 * 256);
+                }
                 else
                 {
                     sheet.AutoSizeColumn(i);
+                }
+                if (sheet.GetColumnWidth(i) < 10 * 256)
+                {
+                    sheet.SetColumnWidth(i,10 * 256);
                 }
             }
 
@@ -650,7 +715,7 @@ namespace LabAutomationPhysicochemical
             int Count = 0;
             foreach (List<string> list in verticalSampleNameList)
             {
-                CreateVerticalSheet(sheet,list,Count);
+                CreateVerticalSheet(sheet,list,Count,compoundsNameList);
                 Count++;
             }
 
@@ -663,18 +728,27 @@ namespace LabAutomationPhysicochemical
                 }
                 else if ((i + 1) % verticalSheetColumnCount == 0)
                 {
-                    sheet.SetColumnWidth(i,30 * 256);
+                    sheet.SetColumnWidth(i,20 * 256);
                 }
                 else
                 {
                     sheet.AutoSizeColumn(i);
+                }
+                if (sheet.GetColumnWidth(i) < 10 * 256)
+                {
+                    sheet.SetColumnWidth(i,10 * 256);
                 }
             }
 
             ExportToExcel(workbook);
         }
 
-
+        /// <summary>
+        /// 创建竖表Excel
+        /// </summary>
+        /// <param name="sheet"></param>
+        /// <param name="cellList"></param>
+        /// <param name="Count"></param>
         private void CreateHorizontalSheet(ISheet sheet,List<string> cellList,int Count)
         {
             DataSet dataSet = new DataSet();
@@ -745,13 +819,13 @@ namespace LabAutomationPhysicochemical
                                 {
                                     cell.SetCellValue(string.Empty);
                                 }
-                                else if (j > horizontalSheetColumnCount * Count + 4)
+                                else if (j > horizontalSheetColumnCount * Count + 3 && j < horizontalSheetColumnCount * Count + 4 + compoundsNameList.Count)
                                 {
-                                    cell.SetCellValue(dataSet.Tables[j - horizontalSheetColumnCount * Count - 5].TableName);
+                                    cell.SetCellValue(compoundsNameList[j - horizontalSheetColumnCount * Count - 4].Key);
                                 }
-                                else if (j > horizontalSheetColumnCount * Count + 2)
+                                else if (j > horizontalSheetColumnCount * Count + 1 && j < horizontalSheetColumnCount * Count + 2 + compoundsNameList.Count)
                                 {
-                                    cell.SetCellValue(dataSet.Tables[j - horizontalSheetColumnCount * Count - 3].TableName);
+                                    cell.SetCellValue(compoundsNameList[j - horizontalSheetColumnCount * Count - 2].Key);
                                 }
                                 else if (j == horizontalSheetColumnCount * Count)
                                 {
@@ -810,7 +884,7 @@ namespace LabAutomationPhysicochemical
                                     CellRangeAddress firstregion = new CellRangeAddress(i,i,horizontalSheetColumnCount * Count + 2,horizontalSheetColumnCount * Count + 3);
                                     sheet.AddMergedRegion(firstregion);
                                 }
-                                else if (j > horizontalSheetColumnCount * Count + 3 && j < horizontalSheetColumnCount * Count + 6)
+                                else if (j > horizontalSheetColumnCount * Count + 3 && j < horizontalSheetColumnCount * Count + 4 + compoundsNameList.Count)
                                 {
                                     cell.SetCellValue(compoundsNameList[j - horizontalSheetColumnCount * Count - 4].Value);
                                 }
@@ -848,12 +922,104 @@ namespace LabAutomationPhysicochemical
                         }
                 }
             }
+
+            //正式数据录入
+            for (int k = 0; k < cellList.Count; k++)
+            {
+                HSSFRow sampleRow = (Count == 0) ? (HSSFRow)sheet.CreateRow(5 + k) : (HSSFRow)sheet.GetRow(5 + k); //创建行或者获取行
+                sampleRow.HeightInPoints = 20;
+                string sampleName = cellList[k];
+                string sampleDilutionratio = string.Empty;
+                List<string> sampleSize = new List<string>();
+                for (int p = 0; p < dataSet.Tables.Count; p++)
+                {
+                    DataTable dataTable = dataSet.Tables[p];
+                    for (int r = 0; r < compoundsNameList.Count; r++)
+                    {
+                        if (dataTable.TableName == compoundsNameList[r].Key)
+                        {
+                            for (int o = 0; o < dataTable.Rows.Count; o++)
+                            {
+                                if (dataTable.Rows[o][0].ToString() == sampleName)
+                                {
+                                    if (sampleDilutionratio == string.Empty)
+                                    {
+                                        sampleDilutionratio = dataTable.Rows[o][1].ToString();
+                                    }
+                                    sampleSize.Add(dataTable.Rows[o][2].ToString());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (int l = horizontalSheetColumnCount * Count; l < horizontalSheetColumnCount * Count + horizontalSheetColumnCount; l++)
+                {
+                    var sampleCell = sampleRow.CreateCell(l);
+                    sampleCell.CellStyle = bordercellStyle;
+                    if (l == horizontalSheetColumnCount * Count)
+                    {
+                        sampleCell.SetCellValue(sampleName);
+                    }
+                    else if (l == horizontalSheetColumnCount * Count + 1)
+                    {
+                        sampleCell.SetCellValue(sampleDilutionratio);
+                    }
+                    else if (l > horizontalSheetColumnCount * Count + 1 && l < horizontalSheetColumnCount * Count + 2 + compoundsNameList.Count)
+                    {
+                        if (sampleName.Contains("以下空白"))
+                        {
+                            sampleCell.SetCellValue(string.Empty);
+                        }
+                        else
+                        {
+                            string value = sampleSize[l - horizontalSheetColumnCount * Count - 2];
+                            if (!value.Contains("/"))
+                            {
+                                decimal C1 = decimal.Parse(value);
+                                C1 = Math.Round(C1,4,MidpointRounding.ToEven);
+                                value = CalculateAccuracyCX(C1.ToString(),4);
+                            }
+                            sampleCell.SetCellValue(value);
+                        }
+                    }
+                    else if (l > horizontalSheetColumnCount * Count + 3 && l < horizontalSheetColumnCount * Count + 4 + compoundsNameList.Count)
+                    {
+
+                        string value = string.Empty;
+                        DataTable dataTable = dataSet.Tables[l - horizontalSheetColumnCount * Count - 4];
+                        if (sampleName.Contains("平均"))
+                        {
+                            for (int o = 0; o < dataTable.Rows.Count; o++)
+                            {
+                                if (dataTable.Rows[o][0].ToString() == sampleName)
+                                {
+                                    decimal C1 = decimal.Parse(dataTable.Rows[o - 1][3].ToString());
+                                    decimal C2 = decimal.Parse(dataTable.Rows[o - 2][3].ToString());
+                                    value = CompareCompoundWithFormulaAverage(compoundsNameList[l - horizontalSheetColumnCount * Count - 4].Key,C1,C2);
+                                    break;
+                                }
+                            }
+                        }
+                        else if (!sampleName.Contains("以下空白"))
+                        {
+                            value = CompareCompoundWithFormula(dataSet,compoundsNameList[l - horizontalSheetColumnCount * Count - 4].Key,sampleName,sampleDilutionratio,sampleSize[l - horizontalSheetColumnCount * Count - 4]);
+                        }
+                        sampleCell.SetCellValue(value);
+                    }
+                    else if (l == horizontalSheetColumnCount * Count + horizontalSheetColumnCount - 1)
+                    {
+                        sampleCell.SetCellValue("/");
+                    }
+                }
+            }
         }
 
         /// <summary>
-        /// 创建竖表Excel
+        /// 创建横表Excel
         /// </summary>
-        private void CreateVerticalSheet(ISheet sheet,List<string> cellList,int Count)
+        private void CreateVerticalSheet(ISheet sheet,List<string> cellList,int Count,List<KeyValuePair<string,string>> CompoundsNameList)
         {
             DataSet dataSet = new DataSet();
             if (testZDRadioButton.IsChecked == true)
@@ -923,13 +1089,13 @@ namespace LabAutomationPhysicochemical
                                 {
                                     cell.SetCellValue(string.Empty);
                                 }
-                                else if (j > verticalSheetColumnCount * Count + 6)
+                                else if (j > verticalSheetColumnCount * Count + 6 && j < verticalSheetColumnCount * Count + 7 + CompoundsNameList.Count)
                                 {
-                                    cell.SetCellValue(dataSet.Tables[j - verticalSheetColumnCount * Count - 7].TableName);
+                                    cell.SetCellValue(CompoundsNameList[j - verticalSheetColumnCount * Count - 7].Key);
                                 }
-                                else if (j > verticalSheetColumnCount * Count + 2)
+                                else if (j > verticalSheetColumnCount * Count + 2 && j < verticalSheetColumnCount * Count + 3 + CompoundsNameList.Count)
                                 {
-                                    cell.SetCellValue(dataSet.Tables[j - verticalSheetColumnCount * Count - 3].TableName);
+                                    cell.SetCellValue(CompoundsNameList[j - verticalSheetColumnCount * Count - 3].Key);
                                 }
                                 else if (j == verticalSheetColumnCount * Count)
                                 {
@@ -988,9 +1154,9 @@ namespace LabAutomationPhysicochemical
                                     CellRangeAddress firstregion = new CellRangeAddress(i,i,verticalSheetColumnCount * Count + 3,verticalSheetColumnCount * Count + 6);
                                     sheet.AddMergedRegion(firstregion);
                                 }
-                                else if (j > verticalSheetColumnCount * Count + 6 && j < verticalSheetColumnCount * Count + 11)
+                                else if (j > verticalSheetColumnCount * Count + 6 && j < verticalSheetColumnCount * Count + 7 + CompoundsNameList.Count)
                                 {
-                                    cell.SetCellValue(compoundsNameList[j - verticalSheetColumnCount * Count - 7].Value);
+                                    cell.SetCellValue(CompoundsNameList[j - verticalSheetColumnCount * Count - 7].Value);
                                 }
                             }
                             break;
@@ -1036,24 +1202,25 @@ namespace LabAutomationPhysicochemical
                 string sampleName = cellList[k];
                 string sampleDilutionratio = string.Empty;
                 List<string> sampleSize = new List<string>();
-                List<string> sampleModelC= new List<string>();
                 for (int p = 0; p < dataSet.Tables.Count; p++)
                 {
                     DataTable dataTable = dataSet.Tables[p];
-                    if (sampleModelC.Count != compoundsNameList.Count)
+                    for (int r = 0; r < CompoundsNameList.Count; r++)
                     {
-                        sampleModelC.Add(dataTable.TableName);
-                    }
-                    for (int o = 0; o < dataTable.Rows.Count; o++)
-                    {
-                        if (dataTable.Rows[o][0].ToString() == sampleName)
+                        if (dataTable.TableName == CompoundsNameList[r].Key)
                         {
-                            if (sampleDilutionratio == string.Empty)
+                            for (int o = 0; o < dataTable.Rows.Count; o++)
                             {
-                                sampleDilutionratio = dataTable.Rows[o][1].ToString();
+                                if (dataTable.Rows[o][0].ToString() == sampleName)
+                                {
+                                    if (sampleDilutionratio == string.Empty)
+                                    {
+                                        sampleDilutionratio = dataTable.Rows[o][1].ToString();
+                                    }
+                                    sampleSize.Add(dataTable.Rows[o][2].ToString());
+                                    break;
+                                }
                             }
-                            sampleSize.Add(dataTable.Rows[o][2].ToString());
-                            break;
                         }
                     }
                 }
@@ -1072,7 +1239,7 @@ namespace LabAutomationPhysicochemical
                     {
                         sampleCell.SetCellValue(sampleDilutionratio);
                     }
-                    else if (l > verticalSheetColumnCount * Count + 2 && l < verticalSheetColumnCount * Count + 7)
+                    else if (l > verticalSheetColumnCount * Count + 2 && l < verticalSheetColumnCount * Count + 3 + CompoundsNameList.Count)
                     {
                         if (sampleName.Contains("以下空白"))
                         {
@@ -1090,7 +1257,7 @@ namespace LabAutomationPhysicochemical
                             sampleCell.SetCellValue(value);
                         }
                     }
-                    else if (l > verticalSheetColumnCount * Count + 6 && l < verticalSheetColumnCount * Count + 11)
+                    else if (l > verticalSheetColumnCount * Count + 6 && l < verticalSheetColumnCount * Count + 7 + CompoundsNameList.Count)
                     {
 
                         string value = string.Empty;
@@ -1103,18 +1270,18 @@ namespace LabAutomationPhysicochemical
                                 {
                                     decimal C1 = decimal.Parse(dataTable.Rows[o - 1][3].ToString());
                                     decimal C2 = decimal.Parse(dataTable.Rows[o - 2][3].ToString());
-                                    value = CompareCompoundWithFormulaAverage(sampleModelC[l - verticalSheetColumnCount * Count - 7],C1,C2);
+                                    value = CompareCompoundWithFormulaAverage(CompoundsNameList[l - verticalSheetColumnCount * Count - 7].Key,C1,C2);
                                     break;
                                 }
                             }
                         }
                         else if (!sampleName.Contains("以下空白"))
                         {
-                            value = CompareCompoundWithFormula(dataSet,sampleModelC[l - verticalSheetColumnCount * Count - 7],sampleName,sampleDilutionratio,sampleSize[l - verticalSheetColumnCount * Count - 7]);
+                            value = CompareCompoundWithFormula(dataSet,CompoundsNameList[l - verticalSheetColumnCount * Count - 7].Key,sampleName,sampleDilutionratio,sampleSize[l - verticalSheetColumnCount * Count - 7]);
                         }
                         sampleCell.SetCellValue(value);
                     }
-                    else
+                    else if (l == verticalSheetColumnCount * Count + verticalSheetColumnCount - 1)
                     {
                         sampleCell.SetCellValue("/");
                     }
