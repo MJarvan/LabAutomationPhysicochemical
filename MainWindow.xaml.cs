@@ -474,7 +474,7 @@ namespace LabAutomationPhysicochemical
             List<string> sampleNameListV = new List<string>();
             List<string> sampleNameListH = new List<string>();
             string Ebanlance = "Dup";
-            string Cbanlance = "平均";
+            string Cbanlance = "平均值";
             int importTakeNumV = 17;
             int importTakeNumH = 23;
             for (int i = 0; i < dataTable.Rows.Count; i++)
@@ -989,7 +989,7 @@ namespace LabAutomationPhysicochemical
 
                         string value = string.Empty;
                         DataTable dataTable = dataSet.Tables[l - horizontalSheetColumnCount * Count - 4];
-                        if (sampleName.Contains("平均"))
+                        if (sampleName.Contains("平均值"))
                         {
                             for (int o = 0; o < dataTable.Rows.Count; o++)
                             {
@@ -1262,7 +1262,7 @@ namespace LabAutomationPhysicochemical
 
                         string value = string.Empty;
                         DataTable dataTable = dataSet.Tables[l - verticalSheetColumnCount * Count - 7];
-                        if (sampleName.Contains("平均"))
+                        if (sampleName.Contains("平均值"))
                         {
                             for (int o = 0; o < dataTable.Rows.Count; o++)
                             {

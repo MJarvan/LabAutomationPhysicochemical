@@ -47,7 +47,7 @@
         </ScrollViewer>
 
         <!--下方内容部分-->
-        <ScrollViewer Tag="1" Name="mainScrollViewer"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" Grid.ColumnSpan="2" Margin="0,58,0,0" Grid.RowSpan="2">
+        <ScrollViewer Grid.Row="1" Tag="1" Name="mainScrollViewer"  AllowDrop="True" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
             <Border BorderThickness="1" BorderBrush="Black" Name="gridborder" >
                 <Grid>
                     <Grid.RowDefinitions>
